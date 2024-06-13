@@ -4,6 +4,8 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     token: typeof window !== 'undefined' ? localStorage.getItem('authToken') || '': '',
+    customer: null,
+    sessionId: '',
   },
   reducers: {
     setToken: (state, action) => {
@@ -15,10 +17,26 @@ const authSlice = createSlice({
       localStorage.removeItem('authToken');
       state.token = '';
     },
+    setCustomer: (state, action) => {
+      const customer = action.payload;
+      state.customer = customer;
+    },
+    clearCustomer: (state) => {
+      state.customer = null
+    },
+    setSessionId: (state, action) => {
+      const sessionId = action.payload;
+      state.sessionId = sessionId;
+    },
+    // clearSessionId: (state, action) => {
+    //   state.sessionId = null
+    // }
   }
 });
 
-export const { setToken, clearToken } = authSlice.actions;
+export const { setToken, clearToken, setCustomer, clearCustomer, setSessionId } = authSlice.actions;
 export const selectToken = state => state.auth.token;
+export const selectCustomer = state => state.auth.customer;
+export const selectSessionId = state => state.auth.sessionId;
 
 export default authSlice.reducer;

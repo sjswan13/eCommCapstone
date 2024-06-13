@@ -1,24 +1,13 @@
 const router = require("express").Router();
 const { prisma } = require("../db");
 
-// Deny access if customer is not an Admin -- blanket statement for all routes below instead of applying route by route
-// router.use((req, res, next) => {
-//   if (!req.customer.isAdmin) {
-//     return res.status(401).send("You must be an Admin to do that.");
-//   }
-//   next();
-// });
-
 // GET /customer - Retrieve a list of all customers 
-  //***ADMIN STORY TIER 3***//
-    // - View list of all customers
-    // - List of relevant info for each customer (billing, addr, phone, etc.)
-
+   
 router.get("/", async (req, res, next) => {
  try {
     const customers = await prisma.customer.findMany({
       include: {
-        shoppingSessions: true
+        shoppingSessions: true,
       }
     });
     res.json(customers);
@@ -45,28 +34,7 @@ router.get("/", async (req, res, next) => {
  }
 });
 
-// GET /shoppingSession/:customerId - Retrieve a specific shoppingSession by customer ID.
-  // This route fetches a specific shopping session by the customer's ID.
-  router.get("/shoppingSession/:id", async (req, res, next) => {
-    try {
-      const { id } = req.params;
-       const customer = await prisma.customer.findUnique({
-        where: { 
-          id: Number(id)
-        },
-        include: {
-          shoppingSessions: true
-        }
-       });
 
-       if (!customer) {
-         return res.status(404).json({ error: "Shopping session not found" });
-       }
-       res.json(customer);
-    } catch (error) {
-       next (error);
-    }
-   });
 
 // POST /customer - Create a new customer
   //***ADMIN STORY TIER 3***//
@@ -79,7 +47,7 @@ router.post("/", async (req, res, next) => {
       data: {
         email: email,
         username: username,
-        password: password, // password is hashed via .$extends in /db/index
+        password: password, 
         firstName: firstName,
         lastName: lastName,
         addressLine1: addressLine1,
@@ -88,7 +56,7 @@ router.post("/", async (req, res, next) => {
         state: state,
         postalCode: postalCode,
         country: country,
-        isAdmin: true || false, // New customers can be admins or not, since this route requires admin access to impliment
+        isAdmin: true || false, 
       },
     });
 
@@ -99,11 +67,6 @@ router.post("/", async (req, res, next) => {
 });
 
 // PUT /customer/:id - Update a specific customer by ID.
-  //***ADMIN STORY TIER 3***// 
-    // - ability to promote to admin
-    // - modify customer accounts ... i took out all keys except isAdmin because ...
-    // ... the rest seem like only items the customer should change:
-    // { email, username, password, firstName, lastName, addressLine1, addressLine2, city, state, postalCode, country }
 
 router.put("/:id", async (req, res, next) => {
  try {
@@ -142,8 +105,7 @@ router.put("/:id", async (req, res, next) => {
 });
 
 // DELETE /customer/:id - Delete a specific customer by Id.
-  //***ADMIN STORY TIER 3***//
-    // - delete customer accounts
+  
 
 router.delete("/:id", async (req, res) => {
  try {
@@ -151,10 +113,7 @@ router.delete("/:id", async (req, res) => {
     const deletedCustomer = await prisma.customer.delete({
       where: { id: parseInt(id) },
     });
-    res.json({ 
-      message: "Customer deleted successfully",
-      deletedCustomer: deletedCustomer 
-    });
+    res.send({ deletedCustomer: deletedCustomer });
  } catch (error) {
     next (error);
  }

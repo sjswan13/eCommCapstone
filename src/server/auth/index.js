@@ -24,8 +24,16 @@ router.post("/register", async (req, res, next) => {
         isAdmin: false,
       }
     });
+
+    // Create a new shopping session for the customer
+    await prisma.shoppingSession.create({
+      data: {
+        customerId: customer.id,
+        total: 0.00, // Initial total for a new shopping session
+      }
+    });
+    
     // Create a token with the customer id
-    // const token = jwt.sign({ id: customer.id }, process.env.JWT);
     const token = jwt.sign({ id: customer.id, isAdmin: customer.isAdmin }, process.env.JWT);
     res.status(201).send ({ token })
 
@@ -63,6 +71,7 @@ router.post("/login", async (req, res, next) => {
 router.get("/me", async (req, res, next) => {
   try {
     let customer;
+    let shoppingSession;
     
 
     // Check if customer is authenticated
@@ -71,15 +80,31 @@ router.get("/me", async (req, res, next) => {
         where: {
           id: req.customer.id,
         },
+        include: {
+          shoppingSessions: true,
+        }
       });
-      console.log('customer - ', customer)
+      // console.log('customer - ', customer)
 
       res.send(customer);
     }
+    if (req.shoppingSession) {
+      shoppingSession = await prisma.shoppingSession.findUnique({
+        where: {
+          customerId: req.customer.id,
+        },
+      });
+      console.log('session - ', shoppingSession);
+
+      res.send(shoppingSession);
+    }
+
 
   } catch (error) {
     next(error);
   }
 });
+
+
 
 module.exports = router;

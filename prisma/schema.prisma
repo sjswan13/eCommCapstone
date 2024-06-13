@@ -28,7 +28,6 @@ model product {
   categoryId Int
   category   productCategory @relation(fields: [categoryId], references: [id])
   cartItem   cartItem[]
-  orderItems orderItem[]
 }
 
 model productCategory {
@@ -42,24 +41,23 @@ model productCategory {
 }
 
 model customer {
-  id               Int               @id @default(autoincrement())
-  email            String            @unique @db.VarChar(255)
-  username         String            @db.VarChar(255)
-  password         String            @db.VarChar(255)
-  firstName        String            @db.VarChar(255)
-  lastName         String            @db.VarChar(255)
-  imageUrl         String?           @db.VarChar(8000)
-  addressLine1     String            @db.VarChar(46)
-  addressLine2     String?           @db.VarChar(46)
-  city             String            @db.VarChar(50)
-  state            String            @db.VarChar(50)
-  postalCode       String            @db.VarChar(50)
-  country          String            @db.VarChar(200)
-  createdAt        DateTime          @default(now()) @db.Timestamp()
-  modifiedAt       DateTime          @updatedAt @db.Timestamp()
-  isAdmin          Boolean?          @default(false) @db.Boolean
-  shoppingSessions shoppingSession[]
-  orderDetails     orderDetail[]
+  id              Int               @id @default(autoincrement())
+  email           String            @unique @db.VarChar(255)
+  username        String            @db.VarChar(255)
+  password        String            @db.VarChar(255)
+  firstName       String            @db.VarChar(255)
+  lastName        String            @db.VarChar(255)
+  imageUrl        String?           @db.VarChar(8000)
+  addressLine1    String            @db.VarChar(46)
+  addressLine2    String?           @db.VarChar(46)
+  city            String            @db.VarChar(50)
+  state           String            @db.VarChar(50)
+  postalCode      String            @db.VarChar(50)
+  country         String            @db.VarChar(200)
+  createdAt       DateTime          @default(now()) @db.Timestamp()
+  modifiedAt      DateTime          @updatedAt @db.Timestamp()
+  isAdmin         Boolean?          @default(false) @db.Boolean
+  shoppingSession shoppingSession[]
 }
 
 model shoppingSession {
@@ -72,18 +70,6 @@ model shoppingSession {
   cartItems  cartItem[]
 }
 
-model orderDetail {
-  id               Int           @id @default(autoincrement())
-  customerId       Int
-  total            Decimal
-  paymentDetailsId Int           @unique // added unique to enforce one-to-one
-  createdAt        DateTime      @default(now())
-  modifiedAt       DateTime      @updatedAt
-  customer         customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  orderItems       orderItem[]
-  paymentDetail    paymentDetail @relation(fields: [paymentDetailsId], references: [id], onDelete: Cascade)
-}
-
 model cartItem {
   id         Int             @id @default(autoincrement())
   sessionId  Int
@@ -93,26 +79,4 @@ model cartItem {
   modifiedAt DateTime        @updatedAt @db.Timestamp()
   session    shoppingSession @relation(fields: [sessionId], references: [id])
   product    product         @relation(fields: [productId], references: [id])
-}
-
-model orderItem {
-  id          Int         @id @default(autoincrement())
-  orderId     Int
-  productId   Int
-  quantity    Int
-  createdAt   DateTime    @default(now())
-  modifiedAt  DateTime    @updatedAt
-  orderDetail orderDetail @relation(fields: [orderId], references: [id])
-  product     product     @relation(fields: [productId], references: [id])
-}
-
-model paymentDetail {
-  id          Int          @id @default(autoincrement())
-  orderId     Int
-  amount      Decimal
-  provider    String       @db.VarChar(150)
-  status      String       @db.VarChar(100)
-  createdAt   DateTime     @default(now())
-  modifiedAt  DateTime     @updatedAt
-  orderDetail orderDetail?
 }

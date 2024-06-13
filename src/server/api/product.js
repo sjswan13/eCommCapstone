@@ -7,6 +7,10 @@ const { prisma } =  require("../db");
 router.get("/", async (req, res, next) => {
   try {
     const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        cartItem: true,
+      }
     });
 
     res.send({ products });
@@ -38,23 +42,27 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
+// Deny access if customer is not an Admin -- blanket statement for all routes below instead of applying route by route
+// router.use((req, res, next) => {
+//   if (!req.customer || !req.customer.isAdmin) {
+//     return res.status(401).send("You must be an Admin to do that.");
+//   }
+//   next();
+// });
+
+
 // POST /product - Create a new product.
-// This route will allow an admin to create a new product.
-  //***ADMIN STORY TIER 3***//
+// This route will allow an admin to create a new products
   
 router.post("/", async (req, res, next) => {
   try {
-
-    if (!req.customer || !req.customer.isAdmin) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { name, desc, imageUrl, SKU, inventory, price, categoryId } = req.body;
+    const { name, desc, author, imageUrl, SKU, inventory, price, categoryId } = req.body;
 
     const newProduct = await prisma.product.create({
       data: {
         name,
         desc,
+        author,
         imageUrl,
         SKU,
         inventory: parseInt(inventory),
@@ -71,17 +79,12 @@ router.post("/", async (req, res, next) => {
 
 // PUT /product/:id - Update a specific product by ID.
 // This route will allow an admin to update an existing product.
-  //***ADMIN STORY TIER 3***//
 
 router.put("/:id", async (req, res, next) => {
  try {
     
-    if (!req.customer || !req.customer.isAdmin) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
     const { id } = req.params;
-    const { name, desc, imageUrl, inventory, price, categoryId } = req.body;
+    const { name, desc, author, imageUrl, inventory, price, categoryId } = req.body;
 
     const existingProduct = await prisma.product.findUnique({
       where: {
@@ -96,16 +99,11 @@ router.put("/:id", async (req, res, next) => {
       data: {
         name: name !== undefined ? name : existingProduct.name,
         desc: desc !== undefined ? desc : existingProduct.desc,
+        author: author !== undefined ? author : existingProduct.author,
         imageUrl: imageUrl !== undefined ? imageUrl : existingProduct.imageUrl,
         inventory: inventory !== undefined ? inventory : existingProduct.inventory,
         price: price !== undefined ? price : existingProduct.price,
         categoryId: categoryId !== undefined ? parseInt(categoryId) : existingProduct.categoryId,
-        // name, ~~~ the above allows us to send any/no updates while retaining the original attribute if no update is passed
-        // desc,
-        // imageUrl,
-        // inventory,
-        // price,
-        // categoryId: categoryId ? parseInt(categoryId) : undefined,
       },
     });
 
@@ -118,15 +116,10 @@ router.put("/:id", async (req, res, next) => {
 
 // DELETE /product/:id - Delete a specific product by ID.
 // This route will allow an admin to delete an existing product.
-  //***ADMIN STORY TIER 3***//
+
 
 router.delete("/:id", async (req, res, next) => {
  try {
-
-    
-    if (!req.customer || !req.customer.isAdmin) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
 
     const { id } = req.params;
 

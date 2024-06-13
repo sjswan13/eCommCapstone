@@ -1,13 +1,13 @@
-// this is the index for the express server
+//git// this is the index for the express server
 require('dotenv').config() //load env variables
 const express = require('express'); // Import Express framework
 const { prisma } = require('./db')
 const router = require('vite-express'); // Import Vite Express for serving Vite-built assets
 const app = express(); // Create an Express application instance
 const jwt = require("jsonwebtoken");
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const path = require('path')
-const cartItemRouter = require('./api/cartItem');
+
 
 
 // Import body-parser middleware for parsing JSON request bodies
@@ -18,9 +18,9 @@ app.use(bodyParser.json());
 // Serve static files from the 'public' directory
 app.use(express.static('public'))
 // app.use("/", express.static(path.join(__dirname, "public")));
-app.use('/cartitem', cartItemRouter);
+
 // Static file-serving middleware / only needed for deployment
-// app.use(express.static(path.join(__dirname, "..", "client/dist")));
+app.use(express.static(path.join(__dirname, "..", "client/dist")));
 
 // express-paginate middleware
 app.all(function(req, res, next) {
@@ -68,4 +68,4 @@ router.listen(app, port, () =>
   console.log(`Server is listening on port ${port}...`)
 );
 
-module.exports = router;
+module.exports = app;

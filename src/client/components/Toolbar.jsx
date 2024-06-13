@@ -14,10 +14,8 @@ import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-import SearchIcon from '@mui/icons-material/Search';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useMeQuery } from '../redux/api';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const pages = ['Books', 'Comics', 'Magazines'];
@@ -26,13 +24,12 @@ const guests = ['Login', 'Register'];
 
 
 function ResponsiveAppBar() {
-  // const isAuthenticated = useSelector(state => state.auth.token !== '');
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const token = useSelector(state => state.auth.token);
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const { data: customer } = useMeQuery();
+  const customer = useSelector((state) => state.auth.customer);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -42,7 +39,6 @@ function ResponsiveAppBar() {
   };
 
   const handleCloseNavMenu = (page) => {
-    // console.log(page);
     if (page) {
       navigate(`/${page}`);
       setAnchorElNav(null);
@@ -79,22 +75,13 @@ function ResponsiveAppBar() {
     },
   }));
   
-  const SearchIconWrapper = styled('div')(({ theme }) => ({
-    padding: theme.spacing(0, 2),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }));
   
   const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: 'inherit',
     width: '100%',
     '& .MuiInputBase-input': {
       padding: theme.spacing(1, 1, 1, 0),
-      // vertical padding + font size from searchIcon
+      
       paddingLeft: `calc(1em + ${theme.spacing(4)})`,
       transition: theme.transitions.create('width'),
       [theme.breakpoints.up('sm')]: {
@@ -117,7 +104,7 @@ function ResponsiveAppBar() {
             onClick={() => navigate('/')}
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
+            href="/"
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -173,7 +160,7 @@ function ResponsiveAppBar() {
             variant="h5"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
+            href="/"
             sx={{
                 mr: 2,
                 display: { xs: 'flex', md: 'none' },
@@ -187,15 +174,6 @@ function ResponsiveAppBar() {
           >
             Retro Rag Reads
           </Typography>
-          <Search>
-            <SearchIconWrapper>
-                <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-            placeholder="Search…"
-            inputProps={{ 'aria-label': 'search' }}
-            />
-            </Search>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
@@ -208,53 +186,59 @@ function ResponsiveAppBar() {
             ))}
           </Box>
           <Tooltip title="Cart">
-            <IconButton
+            {token && <IconButton
               onClick={handleCartClick}
               sx={{ p: 0, marginRight: '10px' }}
               color="inherit"
             >
               <ShoppingCartIcon />
-            </IconButton>
+            </IconButton>}
           </Tooltip>
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
  
               {customer ? (
-      <Avatar alt={customer.firstName} src={customer.imageUrl} />
+      <Avatar alt={`${customer.firstName}`} src={customer.imageUrl} />
     ) : (
       <Avatar alt="Default" src="/default-avatar.png" />
     )}
-                {/* <Avatar/> */}
               </IconButton>
             </Tooltip>
             <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={(e) => handleCloseUserMenu('')}
-            >
-              {token 
-                ? customers.map((customer) => (
-                <MenuItem key={customer} onClick={(e) => handleCloseUserMenu(customer)}>
-                  <Typography textAlign="center">{customer}</Typography>
-                </MenuItem>
-              )) : 
-              guests.map((guest) => (
-                <MenuItem key={guest} onClick={(e) => handleCloseUserMenu(guest)}>
-                  <Typography textAlign="center">{guest}</Typography>
-                </MenuItem>
-              ))}
+            sx={{ mt: '45px' }}
+            id="menu-appbar"
+            anchorEl={anchorElUser}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(anchorElUser)}
+            onClose={(e) => handleCloseUserMenu('')}
+          >
+             {token
+                ? [
+                    ...customers.map((customer) => (
+                      <MenuItem key={customer} onClick={(e) => handleCloseUserMenu(customer)}>
+                        <Typography textAlign="center">{customer}</Typography>
+                      </MenuItem>
+                    )),
+                    customer?.isAdmin && (
+                      <MenuItem key="admin" onClick={() => navigate('/admin')}>
+                        <Typography textAlign="center">Admin View</Typography>
+                      </MenuItem>
+                    ),
+                  ]
+                : guests.map((guest) => (
+                    <MenuItem key={guest} onClick={(e) => handleCloseUserMenu(guest)}>
+                      <Typography textAlign="center">{guest}</Typography>
+                    </MenuItem>
+                  ))}
             </Menu>
           </Box>
         </Toolbar>

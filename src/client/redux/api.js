@@ -1,28 +1,25 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-
-const baseUrl = 'http://localhost:3000/'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:3000/',
+    baseUrl: process.env.REACT_APP_SERVER_URL, 
+    // baseUrl: 'http://localhost:3000/', 
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
-      console.log(getState());
-      if(token) {
-        headers.set('Authorization', `Bearer ${token}`)
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-type', 'application/json')
+      headers.set('Content-Type', 'application/json');
       return headers;
-    }
+    },
   }),
-  
+
   endpoints: (builder) => ({
     me: builder.query({
       query: () => "auth/me",
       providesTags: ["Me"],
     }),
-    
     registrationForm: builder.mutation({
       query: (body) => ({
         url: 'auth/register',
@@ -31,7 +28,6 @@ export const api = createApi({
       }),
       invalidatesTags: ["Me"],
     }),
-
     login: builder.mutation({
       query: (body) => ({
         url: 'auth/login',
@@ -40,136 +36,95 @@ export const api = createApi({
       }),
       invalidatesTags: ["Me"],
     }),
-
-    logout: builder.mutation ({
+    logout: builder.mutation({
       queryFn: () => ({ data: {} }),
       invalidatesTags: ["Me"],
     }),
-
     welcome: builder.query({
       query: () => '/',
     }),
-
-    // fetchCustomerDetails: builder.query({
-    //     query: () => 'auth/me',
-    //   }),
-
     fetchAllProducts: builder.query({
-      query: () => `api/product`, // Add pagination parameters
+      query: () => `api/product`,
     }),
-
     fetchProductById: builder.query({
-      query:(productId) => `api/product/${productId}`,
+      query: (productId) => `/api/product/${productId}`,
     }),
-
-    fetchBooksById: builder.query({
-      query:(bookId) => `api/product/${bookId}`,
+    // fetchProductsBySession: builder.query({
+    //   query: (sessionId) => `api/cartItem/customer/${sessionId}`,
+    // }),
+    fetchCartBySession: builder.query({
+      query: (sessionId) => `api/cartItem/${sessionId}`,
+      // providesTags: ["Cart"],
     }),
-
-    fetchComicsById: builder.query({
-      query:(comicId) => `api/product/${comicId}`,
-    }),
-
-    fetchMagazinesById: builder.query({
-      query:(magazineId) => `api/product/${magazineId}`,
-    }),
-     
-    addToCartBook: builder.mutation({
-      query: ({ sessionId, productId, quantity }) => ({
-        url: '/cartitem',
+    addToCart: builder.mutation({
+      query: ({ sessionId, productId, quantity, type }) => ({
+        url: `api/cartitem/${sessionId}`,
         method: 'POST',
-        body: { 
-          sessionId: parseInt(sessionId), 
-          productId: parseInt(productId), 
-          quantity: parseInt(quantity) 
+        body: {
+          sessionId: parseInt(sessionId),
+          productId: parseInt(productId),
+          quantity: parseInt(quantity),
+          type,
         },
       }),
+      invalidatesTags: ["Cart"],
     }),
-    addToCartComic: builder.mutation({
-      query: ({ comicId, ...body }) => ({
-        url: '/cartitem',
-        method: 'POST',
-        body: { comicId, ...body}
-      }),
+    fetchAllCartItems: builder.query({
+      query: () => 'api/cartItem/',
     }),
-    addToCartMagazine: builder.mutation({
-      query: ({ magazineId, ...body }) => ({
-        url: '/cartitem',
-        method: 'POST',
-        body: { magazineId, ...body}
-      }),
-    }),
-    removeFromCartBook: builder.mutation({
-      query: ({ bookId }) => ({
-        url: '/cart/remove/books',
-        method: 'DELETE',
-        body: { bookId }
-      }),
-    }),
-    removeFromCartComic: builder.mutation({
-      query: ({ comicId }) => ({
-        url: '/cart/remove/comics',
-        method: 'DELETE',
-        body: { comicId }
-      }),
-    }),
-    removeFromCartMagazine: builder.mutation({
-      query: ({ magazineId }) => ({
-        url: '/cart/remove/magazines',
-        method: 'DELETE',
-        body: { magazineId }
-      }),
-    }),
-    saveForLaterBook: builder.mutation({
-      query: ({ bookId }) => ({
-        url: '/cart/save-for-later/books',
-        method: 'POST',
-        body: { bookId }
-      }),
-    }),
-    saveForLaterComic: builder.mutation({
-      query: ({ comicId }) => ({
-        url: '/cart/save-for-later/comics',
-        method: 'POST',
-        body: { comicId }
-      }),
-    }),
-    saveForLaterMagazine: builder.mutation({
-      query: ({ magazineId }) => ({
-        url: '/cart/save-for-later/magazines',
-        method: 'POST',
-        body: { magazineId }
-      }),
-    }),
-
     fetchOrderHistory: builder.query({
-      query: (customerId) => `/api/orderDetail/${customerId}`,
+      query: (customerId) => `api/orderDetail/${customerId}`,
     }),
-
     fetchAllCustomerData: builder.query({
       query: () => '/api/customer',
+      providesTags: ["Customer"],
     }),
-    
-  })
-})
+    removeFromCart: builder.mutation({
+      query: ({ id }) => ({
+        url: `api/cartitem/${id}`,
+        method: 'DELETE',
+      }),
+    }),
+    removeShoppingSession: builder.mutation({
+      query: ({ sessionId }) => ({
+        url: `api/cartitem/shoppingSession/${sessionId}`,
+        method: 'DELETE',
+      }),
+    }),
+    updateCustomer: builder.mutation({
+      query: (customer) => ({
+        url: `api/customer/${customer.id}`,
+        method: "PUT",
+        body: customer,
+      }),
+      invalidatesTags: ["Customer"],
+    }),
+    deleteCustomer: builder.mutation({
+      query: (id) => ({
+        url: `api/customer/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Customer"],
+    }),
+  }),
+});
 
 export const {
   useFetchAllProductsQuery,
-  useFetchBooksByIdQuery,
-  useFetchComicsByIdQuery,
-  useFetchMagazinesByIdQuery,
   useFetchProductByIdQuery,
   useRegistrationFormMutation,
-  useFetchCustomerDetailsQuery,
   useMeQuery,
   useLoginMutation,
   useLogoutMutation,
   useWelcomeQuery,
-  useAddToCartBookMutation,
-  useAddToCartComicMutation,
-  useAddToCartMagazineMutation,
+  useFetchAllCartItemsQuery,
+  useAddToCartMutation,
+  // useFetchProductsBySessionQuery,
+  useFetchCartBySessionQuery,
   useRemoveFromCartMutation,
-  useSaveForLaterMutation,
+  useRemoveShoppingSessionMutation,
   useFetchOrderHistoryQuery,
-  useFetchAllCustomerDataQuery
+  useFetchAllCustomerDataQuery,
+  useUpdateCustomerMutation,
+  useDeleteCustomerMutation,
 } = api;

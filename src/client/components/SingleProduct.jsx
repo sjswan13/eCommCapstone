@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useFetchProductByIdQuery, useAddToCartBookMutation} from '../redux/api';
-import { useSelector } from 'react-redux';
+import { useFetchProductByIdQuery, useAddToCartMutation} from '../redux/api';
+import { useSelector, useDispatch } from 'react-redux';
 import { Button, Box, Card, CardMedia, CardContent, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+
 const SingleProduct = () => {
   const { productId } = useParams();
+  const sessionId = useSelector((state) => state.auth.sessionId);
+  const [addToCartProduct, { isLoading: isUpdating }] = useAddToCartMutation();
   const { data: product, isLoading, error } = useFetchProductByIdQuery(productId);
-  const [addToCartBook, { isLoading: isUpdating }] = useAddToCartBookMutation();
   const navigate = useNavigate();
-  const token = useSelector(state => state.auth.token);
 
   async function handleAddToCartClick(e) {
     e.preventDefault();
     try {
-      await addToCartBook({
-        sessionId: 1, // Example session, update as per your logic
+      await addToCartProduct({
+        sessionId: parseInt(sessionId), 
         productId: parseInt(productId),
         quantity: 1,
       });
-      console.log('Book added to cart successfully');
+      location.reload();
+      console.log('Product added to cart successfully');
+
     } catch (error) {
-      console.error('Error adding book to cart.', error.message);
+      console.error('Error adding item to cart.', error.message);
     }
   }
 
@@ -36,7 +39,7 @@ const SingleProduct = () => {
         sx={{ mb: 2, color: 'black' }}
         onClick={() => window.history.back()}
       >
-        Back to All Products
+        Back to Previous Page
       </Button>
       <div className='single-product'>
         {product && (
@@ -88,7 +91,7 @@ const SingleProduct = () => {
               )}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2 }}>
                 <Button variant='outlined' onClick={() => navigate('/')}>
-                  Home / All Products
+                  Home / Main Page
                 </Button>
               </Box>
             </CardContent>
